@@ -5,34 +5,35 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
-def normalize(df):
-    result = df.copy()
-    for column in df.columns:
-        max_value = df[column].max()
-        min_value = df[column].min()
-        result[column] = (df[column] - min_value) / (max_value - min_value)
-    return result
+def normalize(x, min_value = None, max_value = None):
+    normalized_x = x.copy()
 
-# reading csv file
-pf = pd.read_csv("wdbc.csv")
+    if(min_value is None and max_value is None):
+	    for column in x.columns:
+	        max_value = x[column].max()
+	        min_value = x[column].min()
+	        normalized_x[column] = (x[column] - min_value) / (max_value - min_value)
+	    return normalized_x, min_value, max_value
+    else:
+	    for column in x.columns:
+		    normalized_x[column] = (x[column] - min_value) / (max_value - min_value)
+	    return normalized_x
 
-#dropping first column and label
-x=pf.iloc[:,2:]
 
-#replacing labels
-y = pf['label']
+def sigmoid(z):
+ return 1 / (1 + np.exp(-z))
+
+dataset = pd.read_csv("wdbc.dataset", names=["ID", "label", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15", "X16", "X17", "X18", "X19", "X20", "X21", "X22", "X23", "X24", "X25", "X26", "X27", "X28", "X29", "X30"])
+
+x = dataset.iloc[:, 2:]
+
+y = dataset['label']
 y = y.map({'B': 0, 'M': 1})
-
-
-#normalizing dataset
-x = normalize(x)
-
 
 # partitioning dataset into train, validate and test dataset
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.1, random_state=1)
 
 x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.1, random_state=1)
-
 
 
 X, Y = x_train.T, y_train.values.reshape(1, y_train.shape[0])
@@ -126,25 +127,3 @@ for i in range(len(p)):
 #prediction, accuracy, recall
 actual = y_test.tolist()
 predicted = output
-
-
-print('Accuracy Score :', accuracy_score(actual, predicted))
-confusion_matrix = confusion_matrix(actual, predicted)
-print('Confusion Matrix:', confusion_matrix)
-
-tp = confusion_matrix[0][0]
-fn = confusion_matrix[0][1]
-fp = confusion_matrix[1][0]
-tn = confusion_matrix[1][1]
-precision = tp/(tp+fp)
-print('Precision', precision)
-
-recall = tp/(tp+fn)
-print('Recall', recall)
-
-
-accuracy = (tp + tn) / (tp + tn + fp + fn)
-print('Accuracy', accuracy)
-
-print('Report : ')
-print(classification_report(actual, predicted))
